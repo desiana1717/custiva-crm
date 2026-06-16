@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Order Admin - CUSTIVA PRO</title>
+
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+
+<style>
+body{
+    font-family:'Poppins',sans-serif;
+    background: linear-gradient(135deg,#00c6a2,#0072ff);
+    min-height:100vh;
+    color:#fff;
+}
+
+.container{
+    margin-top:30px;
+}
+
+.card{
+    background:#fff;
+    color:#111;
+    border-radius:18px;
+    padding:20px;
+    box-shadow:0 10px 25px rgba(0,0,0,0.15);
+}
+
+.order-box{
+    margin-top:15px;
+}
+
+.order{
+    background:#f8f9fa;
+    padding:15px;
+    border-radius:12px;
+    margin-bottom:12px;
+    border-left:5px solid #0072ff;
+}
+
+.status{
+    padding:4px 10px;
+    border-radius:8px;
+    font-size:12px;
+    font-weight:bold;
+}
+
+.pending{background:#facc15;color:#000;}
+.proses{background:#3b82f6;color:#fff;}
+.kirim{background:#22c55e;color:#fff;}
+.selesai{background:#6b7280;color:#fff;}
+
+button{
+    border:none;
+    padding:5px 10px;
+    border-radius:8px;
+    margin-right:5px;
+    font-size:12px;
+}
+
+.btn-proses{background:#3b82f6;color:#fff;}
+.btn-kirim{background:#22c55e;color:#fff;}
+.btn-selesai{background:#6b7280;color:#fff;}
+</style>
+
+</head>
+
+<body>
+
+<div class="container">
+
+<h3>📦 ORDER ADMIN PANEL (PRO LEVEL)</h3>
+
+<div class="card">
+
+<div id="orderList"></div>
+
+</div>
+
+</div>
+
+<script type="module">
+
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getDatabase, ref, onValue, update } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyCt5yenhrqh4T3130MQTYrCdPxYfLHF6-I",
+  authDomain: "custiva-e4710.firebaseapp.com",
+  databaseURL: "https://custiva-13223-default-rtdb.firebaseio.com",
+  projectId: "custiva-e4710",
+  storageBucket: "custiva-e4710.firebasestorage.app",
+  messagingSenderId: "999523122079",
+  appId: "1:999523122079:web:317db095a3c42575611baa"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getDatabase(app);
+
+const orderList = document.getElementById("orderList");
+
+// REALTIME READ ORDERS
+onValue(ref(db,"pesanan"),(snapshot)=>{
+
+orderList.innerHTML = "";
+
+snapshot.forEach((child)=>{
+
+let data = child.val();
+let id = child.key;
+
+orderList.innerHTML += `
+<div class="order">
+    <b>${data.perusahaan}</b><br>
+    Barang: ${data.barang}<br>
+    Jumlah: ${data.jumlah}<br>
+    Alamat: ${data.alamat}<br>
+    <small>${data.tanggal}</small><br><br>
+
+    <span class="status ${getStatusClass(data.status)}">
+        ${data.status}
+    </span>
+
+    <br><br>
+
+    <button class="btn-proses" onclick="setStatus('${id}','Diproses')">Proses</button>
+    <button class="btn-kirim" onclick="setStatus('${id}','Dikirim')">Kirim</button>
+    <button class="btn-selesai" onclick="setStatus('${id}','Selesai')">Selesai</button>
+</div>
+`;
+
+});
+
+});
+
+// UPDATE STATUS
+window.setStatus = function(id,status){
+
+update(ref(db,"pesanan/"+id),{
+    status:status
+});
+
+}
+
+// STATUS COLOR
+function getStatusClass(status){
+
+if(status === "Diproses") return "proses";
+if(status === "Dikirim") return "kirim";
+if(status === "Selesai") return "selesai";
+return "pending";
+}
+
+</script>
+
+</body>
+</html>

@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Reminder - CUSTIVA</title>
+
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+<link rel="stylesheet" href="assets/css/style.css">
+
+</head>
+
+<body>
+
+<div class="d-flex">
+
+<!-- ================= SIDEBAR ================= -->
+<div class="sidebar">
+
+<img src="assets/images/logo.png" class="sidebar-logo">
+
+<ul class="menu">
+<li><a href="dashboard.html">Dashboard</a></li>
+<li><a href="pelanggan.html">Pelanggan</a></li>
+<li><a href="chat.html">Chat</a></li>
+<li class="active"><a href="reminder.html">Reminder</a></li>
+<li><a href="tracking.html">Tracking</a></li>
+<li><a href="laporan.html">Laporan</a></li>
+<li><a href="pengaturan.html">Pengaturan</a></li>
+</ul>
+
+</div>
+
+<!-- ================= CONTENT ================= -->
+<div class="content">
+
+<h2 class="fw-bold text-white">Reminder Aktivitas</h2>
+<p class="text-white">Reminder otomatis dari pesanan pelanggan</p>
+
+<!-- ================= STAT ================= -->
+<div class="row g-3 mt-3">
+
+<div class="col-md-4">
+<div class="stat-card">
+<h2 id="totalPesanan">0</h2>
+<p>Total Pesanan</p>
+</div>
+</div>
+
+<div class="col-md-4">
+<div class="stat-card">
+<h2 id="aktifPesanan">0</h2>
+<p>Aktif</p>
+</div>
+</div>
+
+<div class="col-md-4">
+<div class="stat-card">
+<h2 id="prioritas">0</h2>
+<p>Prioritas Tinggi</p>
+</div>
+</div>
+
+</div>
+
+<!-- ================= PROGRESS ================= -->
+<div class="white-card mt-4">
+
+<h5>Progress Bulanan</h5>
+
+<p>Follow Up</p>
+<div class="progress mb-3">
+<div class="progress-bar followup" id="prog1"></div>
+</div>
+
+<p>Pengiriman</p>
+<div class="progress mb-3">
+<div class="progress-bar pengiriman" id="prog2"></div>
+</div>
+
+<p>Closing</p>
+<div class="progress">
+<div class="progress-bar closing" id="prog3"></div>
+</div>
+
+<!-- ================= LIST REMINDER ================= -->
+<div class="white-card mt-4">
+
+<h5>Daftar Reminder</h5>
+
+<div id="reminderList"></div>
+
+</div>
+
+</div>
+
+</div>
+
+<!-- ================= FIREBASE ================= -->
+<script type="module">
+
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getDatabase, ref, onValue } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyCt5yenhrqh4T3130MQTYrCdPxYfLHF6-I",
+  authDomain: "custiva-e4710.firebaseapp.com",
+  databaseURL: "https://custiva-13223-default-rtdb.firebaseio.com",
+  projectId: "custiva-e4710",
+  storageBucket: "custiva-e4710.appspot.com",
+  messagingSenderId: "999523122079",
+  appId: "1:999523122079:web:317db095a3c42575611baa"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getDatabase(app);
+
+const list = document.getElementById("reminderList");
+
+let total = 0;
+let aktif = 0;
+let prioritas = 0;
+
+/* ================= REALTIME FIREBASE ================= */
+onValue(ref(db,"pesanan"), (snapshot)=>{
+
+    list.innerHTML = "";
+
+    total = 0;
+    aktif = 0;
+    prioritas = 0;
+
+    snapshot.forEach((child)=>{
+
+        let d = child.val();
+
+        total++;
+
+        // aktif = belum selesai
+        if(d.status !== "Selesai"){
+            aktif++;
+        }
+
+        // prioritas tinggi
+        if(d.status === "Menunggu Konfirmasi"){
+            prioritas++;
+        }
+
+        list.innerHTML += `
+        <div class="task-card">
+            <div class="high">
+                🔥 ${d.perusahaan}
+            </div>
+
+            <small>
+                Barang: ${d.barang} <br>
+                Jumlah: ${d.jumlah} <br>
+                Alamat: ${d.alamat} <br>
+                Catatan: ${d.keterangan || "-"}
+            </small>
+
+            <br><br>
+
+            <span class="badge bg-warning text-dark">
+                ${d.status}
+            </span>
+        </div>
+        `;
+    });
+
+    /* ================= UPDATE STAT ================= */
+    document.getElementById("totalPesanan").innerText = total;
+    document.getElementById("aktifPesanan").innerText = aktif;
+    document.getElementById("prioritas").innerText = prioritas;
+
+    /* ================= PROGRESS FIX ================= */
+    document.getElementById("prog1").style.width = Math.min(total * 10, 100) + "%";
+    document.getElementById("prog2").style.width = Math.min(aktif * 10, 100) + "%";
+    document.getElementById("prog3").style.width = Math.min(prioritas * 20, 100) + "%";
+
+});
+
+</script>
+
+</body>
+</html>
