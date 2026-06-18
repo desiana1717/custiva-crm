@@ -60,11 +60,10 @@
     <div class="chat-card">
 
         <!-- ROOM -->
-        <select id="roomSelect" class="mb-2 form-control" onchange="changeRoom()">
-            <option value="PT_Sinar_Baja">PT Sinar Baja</option>
-            <option value="PT_Sinar_Maju">PT Sinar Maju</option>
-            <option value="PT_Bumi_Mataritama">PT Bumi Mataritama</option>
-        </select>
+        <select id="roomSelect"
+        class="mb-2 form-control"
+        onchange="changeRoom()">
+</select>
 
         <!-- CHAT BOX -->
         <div class="chat-box" id="chatBox"></div>
@@ -100,9 +99,50 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
 
-let room = "PT_Sinar_Baja";
+let room = "";
 
 const chatBox = document.getElementById("chatBox");
+const roomSelect = document.getElementById("roomSelect");
+
+onValue(ref(db,"pesanan"), (snapshot)=>{
+
+    roomSelect.innerHTML = "";
+
+    let daftarPT = [];
+
+    snapshot.forEach((child)=>{
+
+        let data = child.val();
+
+        if(!data.perusahaan) return;
+
+        if(daftarPT.includes(data.perusahaan)) return;
+
+        daftarPT.push(data.perusahaan);
+
+        let roomName = data.perusahaan
+    .replace(/[.#$\[\]]/g,"")
+    .replace(/\s+/g,"_");
+
+        roomSelect.innerHTML += `
+            <option value="${roomName}">
+                ${data.perusahaan}
+            </option>
+        `;
+    });
+
+    if(daftarPT.length > 0){
+
+    room = daftarPT[0]
+        .replace(/[.#$\[\]]/g,"")
+        .replace(/\s+/g,"_");
+
+    console.log("ROOM PELANGGAN =", room);
+
+    loadChat();
+}
+
+});
 
 /* ================= ROOM ================= */
 window.changeRoom = function () {
@@ -136,21 +176,25 @@ function loadChat() {
 
         snapshot.forEach((child) => {
 
-            let v = child.val();
+    let v = child.val();
 
-            let div = document.createElement("div");
+console.log(v.nama);
+console.log(v.pesan);
+console.log(v.role);
 
-            div.className = "msg " + (v.role === "admin" ? "left" : "right");
+    let div = document.createElement("div");
 
-            div.innerHTML = `
-                <b>${v.nama}</b><br>
-                ${v.pesan}<br>
-                <small>${v.time ?? ""}</small>
-            `;
+    div.className = "msg " + (v.role === "admin" ? "left" : "right");
 
-            chatBox.appendChild(div);
+    div.innerHTML = `
+        <b>${v.nama}</b><br>
+        ${v.pesan}<br>
+        <small>${v.time ?? ""}</small>
+    `;
 
-        });
+    chatBox.appendChild(div);
+
+});
 
         chatBox.scrollTop = chatBox.scrollHeight;
 
